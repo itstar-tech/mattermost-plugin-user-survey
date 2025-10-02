@@ -18,6 +18,11 @@ type Store struct {
 	mock.Mock
 }
 
+func (_m *Store) GetSessions() {
+	//TODO implement me
+	panic("implement me")
+}
+
 // GetAllResponses provides a mock function with given fields: surveyID, lastResponseID, perPage
 func (_m *Store) GetAllResponses(surveyID string, lastResponseID string, perPage uint64) ([]*model.SurveyResponse, error) {
 	ret := _m.Called(surveyID, lastResponseID, perPage)

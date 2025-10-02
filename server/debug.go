@@ -12,8 +12,9 @@ import (
 )
 
 const (
-	resetDataCommand   = "resetdata"
-	listSurveysCommand = "listsurveys"
+	resetDataCommand    = "resetdata"
+	listSurveysCommand  = "listsurveys"
+	listSessionsCommand = "listsessions"
 )
 
 func (p *Plugin) registerDebugCommands() error {
@@ -36,6 +37,15 @@ func (p *Plugin) registerDebugCommands() error {
 		return errors.Wrap(err, "registerDebugCommands: failed to register list surveys command")
 	}
 
+	err = p.API.RegisterCommand(&model.Command{
+		Trigger:      listSessionsCommand,
+		AutoComplete: true,
+	})
+	if err != nil {
+		p.API.LogError("registerDebugCommands: failed to register list sessions command", "error", err.Error())
+		return errors.Wrap(err, "registerDebugCommands: failed to register list sessions command")
+	}
+
 	return nil
 }
 
@@ -51,6 +61,8 @@ func (p *Plugin) ExecuteCommand(ctx *plugin.Context, args *model.CommandArgs) (*
 		return p.executeResetDataCommand(ctx, args)
 	case "/" + listSurveysCommand:
 		return p.executeListSurveysCommand(ctx, args)
+	case "/" + listSessionsCommand:
+		return p.executeListSessionsCommand(ctx, args)
 	}
 	return nil, nil
 }
@@ -98,4 +110,19 @@ func (p *Plugin) executeListSurveysCommand(ctx *plugin.Context, args *model.Comm
 		ids = append(ids, s.ID)
 	}
 	return &model.CommandResponse{Text: "Survey IDs: " + strings.Join(ids, ", ")}, nil
+}
+
+func (p *Plugin) executeListSessionsCommand(ctx *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
+	sessions, err := p.store.GetSessions()
+	if err != nil {
+		return &model.CommandResponse{Text: "Failed to list surveys: " + err.Error()}, nil
+	}
+	if len(sessions) == 0 {
+		return &model.CommandResponse{Text: "No sessions found."}, nil
+	}
+	var ids []string
+	for _, s := range sessions {
+		ids = append(ids, s.ID)
+	}
+	return &model.CommandResponse{Text: "Session IDs: " + strings.Join(ids, ", ")}, nil
 }

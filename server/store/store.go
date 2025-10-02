@@ -31,4 +31,5 @@ type Store interface {
 	ResetData() error
 	GetAllResponses(surveyID, lastResponseID string, perPage uint64) ([]*model.SurveyResponse, error)
 	GetLatestEndedSurvey() (*model.Survey, error)
+	GetSessions() ([]*model.Session, error)
 }
