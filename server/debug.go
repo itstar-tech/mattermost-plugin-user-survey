@@ -12,13 +12,14 @@ import (
 )
 
 const (
-	resetDataCommand = "resetdata"
+	resetDataCommand   = "resetdata"
+	listSurveysCommand = "listsurveys"
 )
 
 func (p *Plugin) registerDebugCommands() error {
 	err := p.API.RegisterCommand(&model.Command{
 		Trigger:      resetDataCommand,
-		AutoComplete: false,
+		AutoComplete: true,
 	})
 
 	if err != nil {
@@ -26,20 +27,31 @@ func (p *Plugin) registerDebugCommands() error {
 		return errors.Wrap(err, "registerDebugCommands: failed to register reset data command")
 	}
 
+	err = p.API.RegisterCommand(&model.Command{
+		Trigger:      listSurveysCommand,
+		AutoComplete: true,
+	})
+	if err != nil {
+		p.API.LogError("registerDebugCommands: failed to register list surveys command", "error", err.Error())
+		return errors.Wrap(err, "registerDebugCommands: failed to register list surveys command")
+	}
+
 	return nil
 }
+
 func (p *Plugin) ExecuteCommand(ctx *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 	split := strings.Fields(args.Command)
 	if len(split) == 0 {
 		return nil, nil
 	}
-
 	command := split[0]
 
-	if command == "/"+resetDataCommand {
+	switch command {
+	case "/" + resetDataCommand:
 		return p.executeResetDataCommand(ctx, args)
+	case "/" + listSurveysCommand:
+		return p.executeListSurveysCommand(ctx, args)
 	}
-
 	return nil, nil
 }
 
@@ -71,4 +83,19 @@ func (p *Plugin) executeResetDataCommand(_ *plugin.Context, args *model.CommandA
 	return &model.CommandResponse{
 		Text: message,
 	}, nil
+}
+
+func (p *Plugin) executeListSurveysCommand(ctx *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
+	surveys, err := p.app.GetSurveys()
+	if err != nil {
+		return &model.CommandResponse{Text: "Failed to list surveys: " + err.Error()}, nil
+	}
+	if len(surveys) == 0 {
+		return &model.CommandResponse{Text: "No surveys found."}, nil
+	}
+	var ids []string
+	for _, s := range surveys {
+		ids = append(ids, s.ID)
+	}
+	return &model.CommandResponse{Text: "Survey IDs: " + strings.Join(ids, ", ")}, nil
 }

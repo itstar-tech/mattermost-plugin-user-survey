@@ -307,3 +307,16 @@ func (a *UserSurveyApp) setCacheUserNotInFilteredTeams(userID, surveyID string, 
 
 	return nil
 }
+
+func (a *UserSurveyApp) GetSurveys() ([]*model.Survey, error) {
+	statuses := model.SurveyStatuses
+	var all []*model.Survey
+	for _, status := range statuses {
+		surveys, err := a.store.GetSurveysByStatus(status)
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, surveys...)
+	}
+	return all, nil
+}
